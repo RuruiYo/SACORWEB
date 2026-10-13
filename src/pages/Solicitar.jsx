@@ -72,6 +72,8 @@ export default function Solicitar() {
     })
 
   const esContrato = modalidad === 'contrato'
+  const conDestino = Boolean(TIPOS_SERVICIO[form.tipoServicio].conDestino)
+  const destino = conDestino ? form.destino : ''
   const viajesEstimados = esContrato ? estimarViajes(form.duracion, form.frecuencia) : null
 
   const enviar = async (e) => {
@@ -85,7 +87,7 @@ export default function Solicitar() {
       ? [
           `Modalidad: contrato recurrente`,
           form.lugar && `Recoleccion: ${form.lugar}`,
-          form.destino && `Destino: ${form.destino}`,
+          destino && `Destino: ${destino}`,
           listaMateriales,
           form.duracion && `Duracion: ${form.duracion} ${Number(form.duracion) === 1 ? 'mes' : 'meses'}`,
           form.frecuencia && `Frecuencia: ${form.frecuencia}`,
@@ -96,7 +98,7 @@ export default function Solicitar() {
       : [
           `Modalidad: servicio puntual`,
           form.lugar && `Recoleccion: ${form.lugar}`,
-          form.destino && `Destino: ${form.destino}`,
+          destino && `Destino: ${destino}`,
           listaMateriales,
           form.fecha && `Fecha estimada: ${form.fecha}`,
           form.volumen && `Volumen: ${form.volumen}`,
@@ -105,7 +107,7 @@ export default function Solicitar() {
 
     // El enlace se arma antes de limpiar el formulario, porque usa sus datos.
     const linkWhatsapp = enlaceCotizacion(
-      { ...form, viajesEstimados },
+      { ...form, destino, viajesEstimados },
       TIPOS_SERVICIO[form.tipoServicio].titulo,
       esContrato,
     )
@@ -251,7 +253,7 @@ export default function Solicitar() {
                 </div>
 
                 <div className="fila-campos">
-                  <div className="campo">
+                  <div className={conDestino ? 'campo' : 'campo campo-ancho'}>
                     <label htmlFor="lugar">Lugar de recoleccion</label>
                     <input
                       id="lugar"
@@ -261,16 +263,18 @@ export default function Solicitar() {
                       onChange={cambiar('lugar')}
                     />
                   </div>
-                  <div className="campo">
-                    <label htmlFor="destino">Destino</label>
-                    <input
-                      id="destino"
-                      maxLength={250}
-                      placeholder="Direccion o municipio"
-                      value={form.destino}
-                      onChange={cambiar('destino')}
-                    />
-                  </div>
+                  {conDestino && (
+                    <div className="campo">
+                      <label htmlFor="destino">Destino</label>
+                      <input
+                        id="destino"
+                        maxLength={250}
+                        placeholder="Direccion o municipio"
+                        value={form.destino}
+                        onChange={cambiar('destino')}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="campo campo-ancho">

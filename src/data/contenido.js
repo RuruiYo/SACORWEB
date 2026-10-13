@@ -155,10 +155,10 @@ export const VACANTES = [
 ]
 
 export const TIPOS_SERVICIO = [
-  { titulo: 'Acarreo de materiales', desc: 'Construccion, agregados, tierra' },
+  { titulo: 'Acarreo de materiales', desc: 'Construccion, agregados, tierra', conDestino: true },
   { titulo: 'Recoleccion de desechos', desc: 'Industrial y comercial' },
   { titulo: 'Reciclaje', desc: 'Acopio y aprovechamiento' },
-  { titulo: 'Especifico', desc: 'Escribe el servicio que deseas y sus detalles' },
+  { titulo: 'Especifico', desc: 'Escribe el servicio que deseas y sus detalles', conDestino: true },
 ]
 
 export const POR_QUE_SACOR = [
