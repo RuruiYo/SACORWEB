@@ -37,5 +37,14 @@ async function enviar(ruta, cuerpo) {
   return datos
 }
 
+export async function consultarMateriales() {
+  const respuesta = await fetch(`${BASE}/api/publico/materiales`, {
+    headers: { 'X-Api-Key': LLAVE },
+  })
+  if (!respuesta.ok) throw new Error(`Error ${respuesta.status}`)
+  const datos = await respuesta.json()
+  return Array.isArray(datos) ? datos : []
+}
+
 export const crearCotizacion = (datos) => enviar('/api/publico/cotizaciones', datos)
 export const crearSolicitudEmpleo = (datos) => enviar('/api/publico/empleo', datos)

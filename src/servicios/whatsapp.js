@@ -11,9 +11,9 @@ function enlace(lineas) {
 export function enlaceCotizacion(form, tipoServicio, esContrato) {
   const detalle = esContrato
     ? [
-        form.duracion && `Duracion: ${form.duracion}`,
+        form.duracion && `Duracion: ${form.duracion} ${Number(form.duracion) === 1 ? 'mes' : 'meses'}`,
         form.frecuencia && `Frecuencia: ${form.frecuencia}`,
-        form.viajes && `Cantidad de viajes: ${form.viajes}`,
+        form.viajesEstimados && `Viajes estimados: ${form.viajesEstimados}`,
         form.inicio && `Fecha de inicio: ${form.inicio}`,
       ]
     : [
@@ -33,6 +33,7 @@ export function enlaceCotizacion(form, tipoServicio, esContrato) {
     `Modalidad: ${esContrato ? 'Contrato recurrente' : 'Servicio puntual'}`,
     form.lugar && `Lugar de recoleccion: ${form.lugar}`,
     form.destino && `Destino: ${form.destino}`,
+    form.materiales?.length > 0 && `Materiales: ${form.materiales.join(', ')}`,
     ...detalle,
     form.descripcion && '',
     form.descripcion && `Detalle: ${form.descripcion}`,

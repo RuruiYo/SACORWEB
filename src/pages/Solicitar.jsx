@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Eyebrow } from '../components/Layout'
 import { DESPUES_DE_ENVIAR, POR_QUE_SACOR, TIPOS_SERVICIO } from '../data/contenido'
-import { crearCotizacion } from '../servicios/api'
+import { consultarMateriales, crearCotizacion } from '../servicios/api'
 import { enlaceCotizacion } from '../servicios/whatsapp'
 
 const VACIO = {
@@ -16,9 +16,28 @@ const VACIO = {
   volumen: '',
   duracion: '',
   frecuencia: '',
-  viajes: '',
   inicio: '',
   descripcion: '',
+  materiales: [],
+}
+
+const NOMBRES_SERVICIO = TIPOS_SERVICIO.map((t) => t.titulo.toLowerCase())
+
+function estimarViajes(meses, frecuencia) {
+  const n = Number(meses)
+  if (!Number.isInteger(n) || n < 1) return null
+  switch (frecuencia) {
+    case 'Diaria':
+      return Math.round((n * 365) / 12)
+    case 'Semanal':
+      return Math.round((n * 52) / 12)
+    case 'Quincenal':
+      return n * 2
+    case 'Mensual':
+      return n
+    default:
+      return null
+  }
 }
 
 export default function Solicitar() {
@@ -31,9 +50,29 @@ export default function Solicitar() {
     whatsapp: null,
   })
 
+  const [materiales, setMateriales] = useState([])
+  const [errorMateriales, setErrorMateriales] = useState(false)
+
+  useEffect(() => {
+    consultarMateriales()
+      .then((lista) =>
+        setMateriales(lista.filter((m) => !NOMBRES_SERVICIO.includes(String(m).toLowerCase()))),
+      )
+      .catch(() => setErrorMateriales(true))
+  }, [])
+
   const cambiar = (campo) => (e) => setForm({ ...form, [campo]: e.target.value })
 
+  const alternarMaterial = (material) =>
+    setForm({
+      ...form,
+      materiales: form.materiales.includes(material)
+        ? form.materiales.filter((m) => m !== material)
+        : [...form.materiales, material],
+    })
+
   const esContrato = modalidad === 'contrato'
+  const viajesEstimados = esContrato ? estimarViajes(form.duracion, form.frecuencia) : null
 
   const enviar = async (e) => {
     e.preventDefault()
@@ -41,14 +80,16 @@ export default function Solicitar() {
 
     // La tabla cotizacion guarda tipo_servicio y descripcion, asi que los detalles
     // del trabajo se arman en un solo texto antes de mandarlo.
+    const listaMateriales = form.materiales.length > 0 && `Materiales: ${form.materiales.join(', ')}`
     const detalles = esContrato
       ? [
           `Modalidad: contrato recurrente`,
           form.lugar && `Recoleccion: ${form.lugar}`,
           form.destino && `Destino: ${form.destino}`,
-          form.duracion && `Duracion: ${form.duracion}`,
+          listaMateriales,
+          form.duracion && `Duracion: ${form.duracion} ${Number(form.duracion) === 1 ? 'mes' : 'meses'}`,
           form.frecuencia && `Frecuencia: ${form.frecuencia}`,
-          form.viajes && `Viajes: ${form.viajes}`,
+          viajesEstimados && `Viajes: ${viajesEstimados}`,
           form.inicio && `Inicio: ${form.inicio}`,
           form.descripcion,
         ]
@@ -56,6 +97,7 @@ export default function Solicitar() {
           `Modalidad: servicio puntual`,
           form.lugar && `Recoleccion: ${form.lugar}`,
           form.destino && `Destino: ${form.destino}`,
+          listaMateriales,
           form.fecha && `Fecha estimada: ${form.fecha}`,
           form.volumen && `Volumen: ${form.volumen}`,
           form.descripcion,
@@ -63,7 +105,7 @@ export default function Solicitar() {
 
     // El enlace se arma antes de limpiar el formulario, porque usa sus datos.
     const linkWhatsapp = enlaceCotizacion(
-      form,
+      { ...form, viajesEstimados },
       TIPOS_SERVICIO[form.tipoServicio].titulo,
       esContrato,
     )
@@ -231,23 +273,53 @@ export default function Solicitar() {
                   </div>
                 </div>
 
+                <div className="campo campo-ancho">
+                  <label>Tipos de material</label>
+                  {materiales.length === 0 ? (
+                    <small className="nota-campo">
+                      {errorMateriales
+                        ? 'No se pudo cargar la lista de materiales. Escribilos en la descripcion.'
+                        : 'Cargando materiales...'}
+                    </small>
+                  ) : (
+                    <div className="chips-material">
+                      {materiales.map((material) => (
+                        <button
+                          type="button"
+                          key={material}
+                          className={`chip-material ${form.materiales.includes(material) ? 'activa' : ''}`}
+                          onClick={() => alternarMaterial(material)}
+                        >
+                          {form.materiales.includes(material) ? '✓ ' : ''}
+                          {material}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {esContrato ? (
                   <>
                     <div className="fila-campos">
                       <div className="campo">
-                        <label htmlFor="duracion">Duracion del contrato</label>
-                        <select id="duracion" value={form.duracion} onChange={cambiar('duracion')}>
-                          <option value="">Seleccionar</option>
-                          <option>3 meses</option>
-                          <option>6 meses</option>
-                          <option>1 anio</option>
-                          <option>Mas de 1 anio</option>
-                        </select>
+                        <label htmlFor="duracion">Duracion del contrato (meses)</label>
+                        <input
+                          id="duracion"
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          max={60}
+                          step={1}
+                          placeholder="Ej. 6"
+                          value={form.duracion}
+                          onChange={cambiar('duracion')}
+                        />
                       </div>
                       <div className="campo">
                         <label htmlFor="frecuencia">Frecuencia de viajes</label>
                         <select id="frecuencia" value={form.frecuencia} onChange={cambiar('frecuencia')}>
                           <option value="">Seleccionar</option>
+                          <option>Diaria</option>
                           <option>Semanal</option>
                           <option>Quincenal</option>
                           <option>Mensual</option>
@@ -257,14 +329,14 @@ export default function Solicitar() {
                     </div>
                     <div className="fila-campos">
                       <div className="campo">
-                        <label htmlFor="viajes">Cantidad de viajes</label>
-                        <input
-                          id="viajes"
-                          maxLength={60}
-                          placeholder="Ej. 4 por semana / 120 al anio"
-                          value={form.viajes}
-                          onChange={cambiar('viajes')}
-                        />
+                        <label>Viajes estimados</label>
+                        <div className="dato-calculado">
+                          {viajesEstimados
+                            ? `${viajesEstimados} viaje${viajesEstimados === 1 ? '' : 's'}`
+                            : form.frecuencia === 'A demanda'
+                              ? 'Segun lo que vayas necesitando'
+                              : 'Escribe la duracion y elige la frecuencia'}
+                        </div>
                       </div>
                       <div className="campo">
                         <label htmlFor="inicio">Fecha de inicio</label>

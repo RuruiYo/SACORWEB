@@ -726,6 +726,37 @@ a { color: inherit; text-decoration: none; }
 }
 .toggle button.activo { background: var(--verde); color: #fff; font-weight: 600; }
 
+.chips-material { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-material {
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--texto-suave);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.chip-material.activa {
+  background: rgba(22, 163, 74, 0.16);
+  border-color: rgba(34, 197, 94, 0.75);
+  color: #fff;
+}
+.nota-campo { font-size: 12.5px; color: var(--texto-dim); }
+.dato-calculado {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-radius: var(--radio-sm);
+  background: rgba(22, 163, 74, 0.08);
+  border: 1px dashed rgba(34, 197, 94, 0.45);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+.campo select option { background: #111; color: #fff; }
+
 .form-pie { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
 .form-pie small { font-size: 12px; color: #7a7a83; }
 
